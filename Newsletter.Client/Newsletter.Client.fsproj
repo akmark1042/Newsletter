@@ -5,10 +5,12 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Types.fs" />
-    <Compile Include="Database.fs" />
     <Compile Include="Menu.fs" />
+    <Compile Include="DefaultStore.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Newsletter.Core\Newsletter.Core.fsproj" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

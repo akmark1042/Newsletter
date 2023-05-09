@@ -2,5 +2,9 @@ source https://api.nuget.org/v3/index.json
 
 storage: none
 framework: net6.0
+nuget giraffe
 nuget npgsql
 nuget sqlprovider
+nuget Microsoft.Extensions.Logging
+nuget Microsoft.Extensions.Hosting
+nuget Microsoft.AspNetCore.Hosting

@@ -1,0 +1,6 @@
+sqlprovider
+npgsql
+Microsoft.Extensions.Logging
+Microsoft.Extensions.Hosting
+Microsoft.AspNetCore.Hosting
+Giraffe
