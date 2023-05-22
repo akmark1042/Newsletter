@@ -7,8 +7,6 @@ open Giraffe
 open Http.Handler
 open Http.Auth
 
-let parsingError err = RequestErrors.BAD_REQUEST err
-
 let webApp staticToken : HttpFunc -> HttpContext -> HttpFuncResult =
     choose [ subRoute
                  "/api"
@@ -19,7 +17,7 @@ let webApp staticToken : HttpFunc -> HttpContext -> HttpFuncResult =
                                    (choose
                                         [
                                              POST >=> route "/create" >=> handleAddSubscriberAsync
-                                             PUT >=> routef "/update/%s" handleUpdateSubscriberAsync              
+                                             PUT >=> routef "/update/%s" handleUpdateSubscriberAsync
                                              GET
                                              >=> choose [ route "" >=> handleGetSubscribersAsync
                                                           routef "/get/%i" handleGetByIdAsync
@@ -30,8 +28,3 @@ let webApp staticToken : HttpFunc -> HttpContext -> HttpFuncResult =
                                 ]
                             )
                     ]
-
-// {
-// 	"Name": "test",
-// 	"Email": "valid@tion.ok"
-// }

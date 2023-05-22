@@ -5,6 +5,8 @@ open System.Net
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Net.Http.Json
+open System.Text
+open System.Text.Json
 
 open Newsletter.Core.Types
 
@@ -58,8 +60,6 @@ let getSubscribersAsync() =
         let client = getClient()
         let! allSubscribers = client.GetAsync("") |> Async.AwaitTask
 
-        //if response.StatusCode = HttpStatusCode.NotFound then
-
         if allSubscribers.IsSuccessStatusCode |> not then
             return raise (sprintf "API returned unexpected status code: %O." allSubscribers.StatusCode |> NotImplementedException)
         else
@@ -67,10 +67,11 @@ let getSubscribersAsync() =
             return result
     }
 
-let updateSubscriberAsync sub =
+let updateSubscriberAsync (email:string) (sub:UpdateSubscriber) =
     async {
         use client = getClient()
-        let! response =  client.PutAsJsonAsync("subscribers/update/%O", sub) |> Async.AwaitTask
+        let httpContent = new StringContent(JsonSerializer.Serialize(sub), Encoding.UTF8, "application/json")
+        let! response = client.PutAsync(("subscribers/update/" + email), httpContent) |> Async.AwaitTask
         if response.StatusCode = HttpStatusCode.NotFound then
             return 0
         else

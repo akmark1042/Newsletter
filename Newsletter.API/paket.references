@@ -4,3 +4,6 @@ Microsoft.Extensions.Logging
 Microsoft.Extensions.Hosting
 Microsoft.AspNetCore.Hosting
 giraffe
+RabbitMQ.Client
+Serilog
+Serilog.AspNetCore

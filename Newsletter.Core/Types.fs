@@ -1,8 +1,12 @@
 [<AutoOpen>]
 module Newsletter.Core.Types
 
+open System.Text.RegularExpressions
+
 open System
 open Giraffe
+
+let private regX = Regex(@"^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$")
 
 type MenuOption =
     | AddSubscriber
@@ -19,14 +23,16 @@ type Subscriber =
         Email: string
     }
 
-type CreateSubscriber = //used only in one place
+type CreateSubscriber =
     {
         Name: string option
         Email: string
     }
     member this.HasErrors() =
-        if this.Email.Length = 0 then Some "Invalid entry." //Add regex for email address checking .com/.net etc.
-        else None
+        if regX.IsMatch( this.Email )
+            then None
+        else
+            Some "An invalid email address was entered."
     
     interface IModelValidation<CreateSubscriber> with
         member this.Validate() =
@@ -34,20 +40,34 @@ type CreateSubscriber = //used only in one place
             | Some msg -> Error (RequestErrors.BAD_REQUEST msg)
             | None     -> Ok this
 
-type UpdateSubscriber = //used only in one place, gets ID from the URL
+type UpdateSubscriber =
     {
-        NewName: string option
+        NewName: string
         NewEmail: string
     }
     member this.HasErrors() =
-        if this.NewEmail.Length = 0 then Some "Invalid entry." //Add regex for email address checking .com/.net etc.
-        else None
+        printfn "Beginning validation"
+        if regX.IsMatch( this.NewEmail )
+            then None
+        else
+            Some "An invalid email address was entered."
     
     interface IModelValidation<UpdateSubscriber> with
         member this.Validate() =
             match this.HasErrors() with
             | Some msg -> Error (RequestErrors.BAD_REQUEST msg)
             | None     -> Ok this
+
+[<CLIMutable>]
+type RabbitMQConfig =
+    {
+        Hosts: string seq
+        ClusterFQDN: string
+        VirtualHost: string
+        SSL: bool
+        Username: string
+        Password: string
+    }
 
 [<CLIMutable>]
 type DatabaseConfig =
@@ -66,6 +86,9 @@ type RootConfig =
     {
         Database : DatabaseConfig
         Newsletter : NewsletterConfig
+        RabbitMQConnection : RabbitMQConfig
+        Exchange: string
+        Queue: string
     }
 
 type AuthToken = AuthToken of String

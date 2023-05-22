@@ -10,6 +10,7 @@ let private regX = Regex(@"^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)
 
 type SubscriberDTO =
     {
+        Id: int
         Name: string
         Email: string
     }
@@ -28,6 +29,7 @@ type SubscriberDTO =
 module SubscriberDTO =
     let fromDomain (subscriber: Subscriber) =
         {
+            Id = subscriber.Id
             Name = (Option.defaultValue "" subscriber.Name)
             Email = subscriber.Email
         }

@@ -4,6 +4,9 @@ storage: none
 framework: net6.0
 nuget giraffe
 nuget npgsql
+nuget RabbitMQ.Client
+nuget Serilog
+nuget Serilog.AspNetCore
 nuget sqlprovider
 nuget Microsoft.Extensions.Logging
 nuget Microsoft.Extensions.Hosting

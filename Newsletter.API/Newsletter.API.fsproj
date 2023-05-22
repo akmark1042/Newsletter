@@ -6,11 +6,21 @@
   <ItemGroup>
     <Compile Include="Database.fs" />
     <Compile Include="Store.fs" />
+    <Compile Include="Messaging\ConnectionStore.fs" />
+    <Compile Include="Messaging\Types.fs" />
+    <Compile Include="Messaging\Publisher.fs" />
+    <Compile Include="Messaging\Consumer.fs" />
+    <Compile Include="Messaging\ConsumerDaemon.fs" />
     <Compile Include="Http\Types.fs" />
     <Compile Include="Http\Auth.fs" />
     <Compile Include="Http\Handler.fs" />
     <Compile Include="Routes.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Newsletter.Core\Newsletter.Core.fsproj" />

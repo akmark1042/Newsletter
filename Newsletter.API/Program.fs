@@ -10,10 +10,14 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Logging
 
 open Giraffe
+open Serilog
 
 open Newsletter.Core
 open Newsletter.API.Routes
 open Newsletter.API.Store
+open Newsletter.API.Messaging
+open Newsletter.API.Messaging.Publisher
+open Newsletter.API.Messaging.ConsumerDaemon
 
 // ---------------------------------
 // Error handler
@@ -59,6 +63,14 @@ let configure (fn: IApplicationBuilder -> IApplicationBuilder) (builder: LocalWe
 
     { Builder = bldr; ConfigureFn = cfgFn }
 
+let configureLogging fn (builder: LocalWebHostBuilder) =
+    let bldr =
+        builder.Builder.ConfigureLogging(
+            Action<WebHostBuilderContext, ILoggingBuilder>(fun ctx bldr -> fn ctx bldr |> ignore)
+        )
+
+    { builder with Builder = bldr }
+
 
 let build (bldr: IHostBuilder) = bldr.Build() 
 
@@ -76,6 +88,13 @@ let withConfiguration (bldr: LocalWebHostBuilder) =
             .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", true, true)
             .AddEnvironmentVariables()
         |> ignore)
+let withSerilogRequestLogging (bldr: LocalWebHostBuilder) =
+    bldr
+    |> configure (fun app -> app.UseSerilogRequestLogging())
+
+let withLogging (bldr: LocalWebHostBuilder) =
+    bldr
+    |> configureLogging (fun _ builder -> builder.AddConsole().AddDebug())
 
 let withGiraffe bldr =
     bldr
@@ -99,7 +118,27 @@ let withServices bldr =
                 SubscriberDatabase(config.Value.Database)
             )
             .AddScoped<ISubscriberStore, SubscriberStore>()
-    )
+            .AddSingleton<ConnectionStore>(fun provider ->
+                let config = provider.GetRequiredService<IOptions<RootConfig>>()
+                new ConnectionStore(config.Value.RabbitMQConnection))
+            .AddScoped<Publisher>(fun provider ->
+                let config = provider.GetRequiredService<IOptions<RootConfig>>()
+                let conn = provider.GetRequiredService<ConnectionStore>().GetDefaultConnection()
+                let logger = provider.GetRequiredService<Serilog.ILogger>()
+                new Publisher(conn, logger, config.Value))
+            .AddHostedService<ConsumerDaemon>()
+            )
+
+let configureSerilog (context: HostBuilderContext) (services: IServiceProvider) (config: LoggerConfiguration) =
+    // template is default with addition of optional SourceContext (FromContext set Class) and optional Function (FromContext set Property)
+    // note that only SourceContext or Function will be set, never both
+    let logTemplate = "[{Timestamp:HH:mm:ss} {Level:u3} <{SourceContext}{Function}>] {Message:lj}{NewLine}{Exception}"
+    config
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(outputTemplate = logTemplate)
+    |> ignore
 
 ///////////////////////////////////////////////////////////////
 // For saving the schema
@@ -117,10 +156,12 @@ let main args =
                 webHostBuilder
                 |> withLocalBuilder
                 |> withConfiguration
+                |> withSerilogRequestLogging
                 |> withGiraffe
                 |> withServices
                 |> ignore
                 )
+            .UseSerilog(configureSerilog)
             .Build()
             .Run()
 

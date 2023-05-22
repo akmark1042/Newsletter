@@ -24,16 +24,25 @@ let getSubscriberEmail() =
     Console.ReadLine()
 
 let getSubscriberInfo() =
-    let name = getSubscriberName ()
-    let email = getSubscriberEmail ()
+    let name = getSubscriberName()
+    let email = getSubscriberEmail()
 
     {
         Name = Some name
         Email = email
     }
 
+let getUpdateInfo =
+    let updName = getSubscriberName()
+    let updEmail = getSubscriberEmail()
+
+    {
+        NewName = updName
+        NewEmail = updEmail
+    }
+
 let showSubscription (sub: Subscriber) =
-    printfn "%s - %s"  (Option.defaultValue "" sub.Name) sub.Email
+    printfn "%i. %s - %s" sub.Id (Option.defaultValue "" sub.Name) sub.Email
 
 let showAllSubscribers (sublist : Subscriber list) =
     printfn ""
@@ -42,7 +51,7 @@ let showAllSubscribers (sublist : Subscriber list) =
     else
         sublist |> List.iter showSubscription
 
-let instructions () =
+let instructions() =
     printfn "\nChoose an option:"
     printfn "1. Add a subscriber"
     printfn "2. List all current subscribers"
@@ -51,7 +60,7 @@ let instructions () =
     printfn "5. Cancel a subscription"
     printfn "6. End the program \n"
 
-let rec getMenuOption () =
+let rec getMenuOption() =
     instructions()
     let input = Console.ReadLine()
     match input with

@@ -3,14 +3,11 @@
 open System
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
-open Microsoft.Extensions.Options
 open Microsoft.Extensions.Configuration
-
 
 open Newsletter.Client.Menu
 open Newsletter.Core.Types
 open Newsletter.Client.Store
-open Newsletter.Core
 
 // --------------------------------- 
 // Config Helpers 
@@ -34,9 +31,7 @@ let withServices bldr =
     bldr |> configureServices (fun context services ->
         services
             .Configure<RootConfig>(context.Configuration)
-            )
-            
-    //)
+        )
 
 let rec loopAsync() =
     async {
@@ -52,7 +47,7 @@ let rec loopAsync() =
             return! loopAsync()
         | DisplaySubscribers ->
             let! allList = getSubscribersAsync()
-            do showAllSubscribers allList
+            do showAllSubscribers (List.sort allList)
             return! loopAsync()
         | SubscriberSearch ->
             let input = getSearch().ToString()
@@ -68,14 +63,16 @@ let rec loopAsync() =
         | UpdateSubscription ->
             let email = getSubscriberEmail()
             let! subscriber = getByEmailAsync email
-            let newCredentials = getSubscriberInfo()
-            let! result = updateSubscriberAsync newCredentials
-            match result with
-            | 2 -> let msg = "" + newCredentials.Name.ToString() + "was updated."
-                   printfn "%s" msg
-            | 1 ->
-                printfn "This subscription has been canceled. \n"
-            | _zero -> printfn "No subscriptions were found. \n"
+            match subscriber with
+            | None -> printfn "No matching item was found."
+            | Some sub ->
+                let newCredentials = getUpdateInfo
+                let! result = updateSubscriberAsync sub.Email newCredentials
+                match result with
+                | 1 -> 
+                    let msg = "" + newCredentials.NewName.ToString() + " was updated."
+                    printfn "%s" msg
+                | _zero -> printfn "No subscriptions were found. \n"
             return! loopAsync()
         | EndSubscription ->
             let email = getSubscriberEmail()

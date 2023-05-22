@@ -71,7 +71,7 @@ let updateSubscriberAsync (sdb: SubscriberDatabase) (id:string) (sub:UpdateSubsc
         let db = sdb.getDataContext()
         let rowMaybe = query {
             for row in db.Public.Subscriber do
-                where (row.Email = sub.NewEmail)
+                where (row.Email = id)
                 select (Some row)
                 exactlyOneOrDefault
         }
@@ -79,7 +79,7 @@ let updateSubscriberAsync (sdb: SubscriberDatabase) (id:string) (sub:UpdateSubsc
         | None -> return 0
         | Some subscriber ->
             try
-                subscriber.Name <- sub.NewName
+                subscriber.Name <- Some sub.NewName
                 subscriber.Email <- sub.NewEmail
                 subscriber.OnConflict <- Common.OnConflict.Update
                 db.SubmitUpdates()
@@ -90,8 +90,6 @@ let updateSubscriberAsync (sdb: SubscriberDatabase) (id:string) (sub:UpdateSubsc
 
 let addSubscriberAsync (sdb: SubscriberDatabase) (sub:CreateSubscriber) = 
     async {
-        //search/get, if found, return 2. 
-        //That would prevent update conflicts.
         let db = sdb.getDataContext()
         let row = db.Public.Subscriber.Create()
         try
